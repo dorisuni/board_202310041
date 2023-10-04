@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{component/config :: config}"></th:block>
+</head>
+<body>
+<div th:replace="~{component/header :: header}"></div>
+<div th:replace="~{component/nav :: nav}"></div>
+
+<div class="container">
+    <!-- 화면에 보여질 내용이 들어갈 부분 -->
+    <table class="table table-hover">
+        <tr>
+            <th>id</th>
+            <td th:text="${board.id}"></td>
+        </tr>
+        <tr>
+            <th>boardWriter</th>
+            <td th:text="${board.boardWriter}"></td>
+        </tr>
+        <tr>
+            <th>boardPass</th>
+            <td th:text="${board.boardPass}"></td>
+        </tr>
+        <tr>
+            <th>boardContents</th>
+            <td th:text="${board.boardContents}"></td>
+        </tr>
+    </table>
+    <button onclick="board_list()">목록</button>
+    <button onclick="board_update()">수정</button>
+    <button onclick="board_delete()">삭제</button>
+
+    <div id="pass-check" style="display: none;">
+        <input type="text" id="board-pass" placeholder="비밀번호 입력하세요">
+        <input type="button" onclick="pass_check()" value="확인">
+    </div>
+
+    <div id="comment-write-area">
+        <input type="text" id="comment-writer" placeholder="작성자 입력">
+        <input type="text" id="comment-contents" placeholder="내용 입력">
+        <button onclick="comment_write()">댓글작성</button>
+    </div>
+
+    <div id="comment-list-area">
+        <th:block th:if="${commentList == null}">
+            <h3>작성된 댓글이 없습니다.</h3>
+        </th:block>
+        <th:block th:unless="${commentList == null}">
+            <table id="comment-list">
+                <tr>
+                    <th>작성자</th>
+                    <th>내용</th>
+                    <th>작성시간</th>
+                </tr>
+                <tr th:each="comment : ${commentList}">
+                    <td th:text="${comment.commentWriter}"></td>
+                    <td th:text="${comment.commentContents}"></td>
+                    <td th:text="${comment.createdAt}"></td>
+                </tr>
+            </table>
+        </th:block>
+    </div>
+
+</div>
+
+<div th:replace="~{component/footer :: footer}"></div>
+
+</body>
+</html>

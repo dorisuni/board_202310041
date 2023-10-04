@@ -66,5 +66,27 @@
 
 <div th:replace="~{component/footer :: footer}"></div>
 
+<script th:inline="javascript">
+    const board_update = () => {
+        const id = /*[[${board.id}]]*/ '';
+        location.href = "/board/update?id=" + id;
+    }
+    const board_delete = () => {
+        const passArea = document.getElementById("pass-check");
+        passArea.style.display = "block";
+    }
+    const pass_check = () => {
+        const inputPass = document.getElementById("board-pass").value;
+        const pass = /*[[${board.boardPass}]]*/ '';
+        const id = /*[[${board.id}]]*/ '';
+        if (inputPass == pass) {
+            location.href = "/board/delete?id=" + id;
+        } else {
+            alert("비밀번호 불일치!");
+        }
+    }
+</script>
+
+
 </body>
 </html>

@@ -21,8 +21,10 @@ public class CommentEntity extends BaseEntity{
     private String commentWriter;
     @Column(length = 200, nullable = false)
     private String commentContents;
-    @Column
-    private int boardId;
+    // boardId를 외래 키(Foreign Key)로 설정
+    @ManyToOne
+    @JoinColumn(name = "board_id")
+    private BoardEntity board;
 
     // DTO -> Entity 변환 메서드
     public static CommentEntity toSaveEntity(CommentDTO commentDTO){

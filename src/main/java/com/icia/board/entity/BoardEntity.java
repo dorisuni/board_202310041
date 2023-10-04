@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Setter(AccessLevel.PRIVATE)
@@ -30,6 +31,11 @@ public class BoardEntity extends BaseEntity{
 
     @Column
     private int boardHits;
+
+    // 댓글(CommentEntity)과의 일대다 관계 설정
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
+    private List<CommentEntity> comments;
+
 
     // DTO -> Entity 변환 메서드
     public static BoardEntity toSaveEntity(BoardDTO boardDTO){

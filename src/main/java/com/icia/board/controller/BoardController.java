@@ -58,6 +58,7 @@ public class BoardController {
 
         try {
             BoardDTO boardDTO = boardService.findById(id);
+            boardService.incrementBoardHitsById(id); // boardHits ++
             model.addAttribute("board", boardDTO);
             return "/boardPages/boardDetail";
         } catch (NoSuchElementException e) {

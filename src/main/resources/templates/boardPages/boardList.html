@@ -79,5 +79,11 @@
 
 <div th:replace="~{component/footer :: footer}"></div>
 
+<script th:inline="javascript">
+    const boardList = [[${boardList}]];
+    console.log(boardList);
+
+</script>
+
 </body>
 </html>

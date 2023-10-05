@@ -45,6 +45,7 @@ public class BoardController {
                           @RequestParam(value = "page", required = false, defaultValue = "1") int page) {
         Page<BoardDTO> boardDTOList = boardService.findAll(page);
         model.addAttribute("boardList", boardDTOList);
+        System.out.println("boardDTOList = " + boardDTOList);
         // 목록 하단에 보여줄 페이지 번호
         int blockLimit = 3;
         int startPage = (((int) (Math.ceil((double) page / blockLimit))) - 1) * blockLimit + 1;

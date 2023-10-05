@@ -6,6 +6,8 @@ import com.icia.board.service.BoardService;
 import com.icia.board.service.CommentService;
 import com.icia.board.service.MemberService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -85,6 +87,26 @@ public class BoardController {
         model.addAttribute("board", dto);
         return "boardPages/boardDetail";
 //        return "redirect:/board?id=" + boardDTO.getId();
+    }
+
+    // axios로 delete 요청
+    @DeleteMapping("/{id}")
+    public ResponseEntity deleteByAxios(@PathVariable("id") Long id) {
+        boardService.delete(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping("/update/{id}")
+    public String update(@PathVariable("id") Long id, Model model) {
+        BoardDTO boardDTO = boardService.findById(id);
+        model.addAttribute("board", boardDTO);
+        return "boardPages/boardUpdate";
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity update(@RequestBody BoardDTO boardDTO) {
+        boardService.update(boardDTO);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 

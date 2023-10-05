@@ -1,70 +1,60 @@
 package com.icia.board.service;
 
 import com.icia.board.dto.BoardDTO;
-import com.icia.board.dto.MemberDTO;
 import com.icia.board.entity.BoardEntity;
-import com.icia.board.entity.MemberEntity;
 import com.icia.board.repository.BoardRepository;
-import com.icia.board.repository.MemberRepository;
+import com.icia.board.util.UtilClass;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class BoardService {
     private final BoardRepository boardRepository;
 
-
     public Long save(BoardDTO boardDTO) {
-        System.out.println("boardDTO = " + boardDTO);
-        // DTO -> Entity 변환을 위한 메서드 호출
         BoardEntity boardEntity = BoardEntity.toSaveEntity(boardDTO);
-        Long savedId = boardRepository.save(boardEntity).getId();
-        return savedId;
+        return boardRepository.save(boardEntity).getId();
     }
 
+    public Page<BoardDTO> findAll(int page) {
+        page = page - 1;
+        int pageLimit = 5;
+        Page<BoardEntity> boardEntities = boardRepository.findAll(PageRequest.of(page, pageLimit, Sort.by(Sort.Direction.DESC, "id")));
+        Page<BoardDTO> boardList = boardEntities.map(boardEntity ->
+                BoardDTO.builder()
+                        .id(boardEntity.getId())
+                        .boardTitle(boardEntity.getBoardTitle())
+                        .boardWriter(boardEntity.getBoardWriter())
+                        .boardHits(boardEntity.getBoardHits())
+                        .createdAt(UtilClass.dateTimeFormat(boardEntity.getCreateAt()))
+                        .build());
+        return boardList;
+    }
 
-//    public List<BoardDTO> pagingList(int page) {
-//        int pageLimit = 10; // 한페이지당 보여줄 글 갯수
-//        int pagingStart = (page - 1) * pageLimit; // 요청한 페이지에 보여줄 첫번째 게시글의 순서
-//        Map<String, Integer> pagingParams = new HashMap<>();
-//        pagingParams.put("start", pagingStart);
-//        pagingParams.put("limit", pageLimit);
-//        return boardRepository.pagingList(pagingParams);
-//    }
+    /**
+     * 서비스 클래스 메서드에서 @Transactional 붙이는 경우
+     * 1. jpql로 작성한 메서드 호출할 때
+     * 2. 부모엔티티에서 자식엔티티를 바로 호출할 때
+     */
 
-    public List<BoardDTO> findAll1() {
-        List<BoardEntity> boardEntityList = boardRepository.findAll(Sort.by(Sort.Direction.DESC,"id"));
-        List<BoardDTO> boardDTOList = new ArrayList<>();
-        boardEntityList.forEach(entity -> {
-            boardDTOList.add(BoardDTO.toDTO(entity));
-        });
-        return boardDTOList;
+    @Transactional
+    public void increaseHits(Long id) {
+        boardRepository.increaseHits(id);
     }
 
     public BoardDTO findById(Long id) {
         BoardEntity boardEntity = boardRepository.findById(id).orElseThrow(() -> new NoSuchElementException());
-
         return BoardDTO.toDTO(boardEntity);
-
-    }
-
-    /* Views Counting
-    * 서비스 클래스 메서드에서 @Transactional 붙이는 경우
-    * 1. jpql로 작성한 메서드 호출할 때
-    * 2. 부모엔티티에서 자식엔티티를 바로 호출할 때
-    *
-    * */
-    @Transactional
-    public int incrementBoardHitsById(Long id) {
-        return boardRepository.incrementBoardHitsById(id);
     }
 
     public void delete(Long id) {

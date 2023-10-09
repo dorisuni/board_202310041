@@ -10,17 +10,21 @@ import javax.persistence.EntityListeners;
 import javax.persistence.MappedSuperclass;
 import java.time.LocalDateTime;
 
+/**
+ * 작성시간, 수정시간 컬럼을 가지는 클래스
+ * 이 클래스를 상속받는 클래스는 작성시간(createdAt), 수정시간(updatedAt) 컬럼이 추가됨
+ */
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 public class BaseEntity {
-    //작성시간 칼럼
+    // 작성시간 컬럼
     @CreationTimestamp
     @Column(updatable = false)
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
-    //수정시간 칼럼
+    // 수정시간 컬럼
     @UpdateTimestamp
     @Column(insertable = false)
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
 }

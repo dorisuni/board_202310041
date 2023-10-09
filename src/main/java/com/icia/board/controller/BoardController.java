@@ -1,7 +1,9 @@
 package com.icia.board.controller;
 
 import com.icia.board.dto.BoardDTO;
+import com.icia.board.dto.CommentDTO;
 import com.icia.board.service.BoardService;
+import com.icia.board.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -10,13 +12,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Controller
 @RequestMapping("/board")
 @RequiredArgsConstructor
 public class BoardController {
     private final BoardService boardService;
+    private final CommentService commentService;
 
     @GetMapping("/save")
     public String save() {
@@ -24,7 +29,7 @@ public class BoardController {
     }
 
     @PostMapping("/save")
-    public String save(@ModelAttribute BoardDTO boardDTO) {
+    public String save(@ModelAttribute BoardDTO boardDTO) throws IOException {
         boardService.save(boardDTO);
         return "redirect:/board";
     }
@@ -42,31 +47,47 @@ public class BoardController {
      */
     @GetMapping
     public String findAll(Model model,
-                          @RequestParam(value = "page", required = false, defaultValue = "1") int page) {
-        Page<BoardDTO> boardDTOList = boardService.findAll(page);
-        model.addAttribute("boardList", boardDTOList);
-        System.out.println("boardDTOList = " + boardDTOList);
-        // 목록 하단에 보여줄 페이지 번호
+                          @RequestParam(value = "page", required = false, defaultValue = "1") int page,
+                          @RequestParam(value = "type", required = false, defaultValue = "boardTitle") String type,
+                          @RequestParam(value = "q", required = false, defaultValue = "") String q) {
+        Page<BoardDTO> boardDTOList = boardService.findAll(page, type, q);
+
         int blockLimit = 3;
         int startPage = (((int) (Math.ceil((double) page / blockLimit))) - 1) * blockLimit + 1;
         int endPage = ((startPage + blockLimit - 1) < boardDTOList.getTotalPages()) ? startPage + blockLimit - 1 : boardDTOList.getTotalPages();
-//        if ((startPage + blockLimit - 1) < boardDTOS.getTotalPages()) {
-//            endPage = startPage + blockLimit - 1;
-//        } else {
-//            endPage = boardDTOS.getTotalPages();
-//        }
+
+        model.addAttribute("boardList", boardDTOList);
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
+        model.addAttribute("page", page);
+        model.addAttribute("type", type);
+        model.addAttribute("q", q);
 
         return "boardPages/boardList";
     }
 
     @GetMapping("/{id}")
-    public String findById(@PathVariable("id") Long id, Model model) {
+    public String findById(@PathVariable("id") Long id, Model model,
+                           @RequestParam(value = "page", required = false, defaultValue = "1") int page,
+                           @RequestParam(value = "type", required = false, defaultValue = "boardTitle") String type,
+                           @RequestParam(value = "q", required = false, defaultValue = "") String q) {
         boardService.increaseHits(id);
-        BoardDTO boardDTO = boardService.findById(id);
-        model.addAttribute("board", boardDTO);
-        return "boardPages/boardDetail";
+        model.addAttribute("page", page);
+        model.addAttribute("type", type);
+        model.addAttribute("q", q);
+        try {
+            BoardDTO boardDTO = boardService.findById(id);
+            model.addAttribute("board", boardDTO);
+            List<CommentDTO> commentDTOList = commentService.findAll(id);
+            if (commentDTOList.size() > 0) {
+                model.addAttribute("commentList", commentDTOList);
+            } else {
+                model.addAttribute("commentList", null);
+            }
+            return "boardPages/boardDetail";
+        } catch (NoSuchElementException e) {
+            return "boardPages/boardNotFound";
+        }
     }
 
     // 주소로 요청

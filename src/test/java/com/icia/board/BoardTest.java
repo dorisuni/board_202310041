@@ -2,6 +2,8 @@ package com.icia.board;
 
 import com.icia.board.dto.BoardDTO;
 import com.icia.board.entity.BoardEntity;
+import com.icia.board.entity.BoardFileEntity;
+import com.icia.board.repository.BoardFileRepository;
 import com.icia.board.repository.BoardRepository;
 import com.icia.board.service.BoardService;
 import com.icia.board.util.UtilClass;
@@ -12,8 +14,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 @SpringBootTest
@@ -24,6 +33,48 @@ public class BoardTest {
     @Autowired
     private BoardRepository boardRepository;
 
+    List<MultipartFile> boardFile = new ArrayList<>();
+    MultipartFile file = new MultipartFile() {
+        @Override
+        public String getName() {
+            return null;
+        }
+
+        @Override
+        public String getOriginalFilename() {
+            return null;
+        }
+
+        @Override
+        public String getContentType() {
+            return null;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return false;
+        }
+
+        @Override
+        public long getSize() {
+            return 0;
+        }
+
+        @Override
+        public byte[] getBytes() throws IOException {
+            return new byte[0];
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return null;
+        }
+
+        @Override
+        public void transferTo(File dest) throws IOException, IllegalStateException {
+
+        }
+    };
     // 게시글 50개 저장하기
     private BoardDTO newBoard(int i) {
         BoardDTO boardDTO = new BoardDTO();
@@ -38,7 +89,11 @@ public class BoardTest {
     @DisplayName("게시글 데이터 붓기")
     public void saveData() {
         IntStream.rangeClosed(1, 50).forEach(i -> {
-            boardService.save(newBoard(i));
+            try {
+                boardService.save(newBoard(i));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         });
     }
 
@@ -65,7 +120,7 @@ public class BoardTest {
                         .boardTitle(boardEntity.getBoardTitle())
                         .boardWriter(boardEntity.getBoardWriter())
                         .boardHits(boardEntity.getBoardHits())
-                        .createdAt(UtilClass.dateTimeFormat(boardEntity.getCreateAt()))
+                        .createdAt(UtilClass.dateTimeFormat(boardEntity.getCreatedAt()))
                         .build());
         System.out.println("boardList.getContent() = " + boardList.getContent()); // 요청페이지에 들어있는 데이터
         System.out.println("boardList.getTotalElements() = " + boardList.getTotalElements()); // 전체 글갯수
@@ -80,14 +135,23 @@ public class BoardTest {
     @Test
     @DisplayName("검색 메서드 확인")
     public void searchMethod() {
-        //제목에 1이 포함된 결과 검색
+        // 제목에 1이 포함된 결과 검색
+//        List<BoardEntity> boardEntityList = boardRepository.findByBoardTitleContainingOrderById("1");
+
+        // 제목에 1이 포함된 결과 페이징
         int page = 0;
         int pageLimit = 5;
-//        Page<BoardEntity> boardEntities = boardRepository.findByBoardTitleContaining("1",PageRequest.of(page,pageLimit,Sort.by(Sort.Direction.DESC,"id")));
-        //제목 또는 작성자에 1이 포함된 결과 페이징
+        Page<BoardEntity> boardEntities =
+                boardRepository.findByBoardTitleContaining("1", PageRequest.of(page, pageLimit, Sort.by(Sort.Direction.DESC, "id")));
+        // 제목 또는 작성자에 1이 포함된 결과 페이징
         String q = "1";
-        Page<BoardEntity> boardEntities = boardRepository.findByBoardTitleContainingOrBoardWriterContaining(q, q, PageRequest.of(page, pageLimit, Sort.by(Sort.Direction.DESC, "id")));
+        boardEntities = boardRepository.findByBoardTitleContainingOrBoardWriterContaining(q, q, PageRequest.of(page, pageLimit, Sort.by(Sort.Direction.DESC, "id")));
 
+
+        // BoardEntity를 출력하지 않고 각각을 DTO로 변환해서 출력
+//        boardEntityList.forEach(boardEntity -> {
+//            System.out.println(BoardDTO.toDTO(boardEntity));
+//        });
 
         Page<BoardDTO> boardList = boardEntities.map(boardEntity ->
                 BoardDTO.builder()
@@ -95,7 +159,6 @@ public class BoardTest {
                         .boardTitle(boardEntity.getBoardTitle())
                         .boardWriter(boardEntity.getBoardWriter())
                         .boardHits(boardEntity.getBoardHits())
-                        .createdAt(UtilClass.dateTimeFormat(boardEntity.getCreateAt()))
                         .build());
         System.out.println("boardList.getContent() = " + boardList.getContent()); // 요청페이지에 들어있는 데이터
         System.out.println("boardList.getTotalElements() = " + boardList.getTotalElements()); // 전체 글갯수
@@ -105,6 +168,24 @@ public class BoardTest {
         System.out.println("boardList.hasPrevious() = " + boardList.hasPrevious()); // 이전페이지 존재 여부
         System.out.println("boardList.isFirst() = " + boardList.isFirst()); // 첫페이지인지 여부
         System.out.println("boardList.isLast() = " + boardList.isLast()); // 마지막페이지인지 여부
-//    }
     }
+
+    @Autowired
+    private BoardFileRepository boardFileRepository;
+
+    @Test
+    @Transactional
+    @DisplayName("참조관계 확인")
+    public void findTest() {
+        // BoardEntity 조회
+        Optional<BoardEntity> boardEntityOptional = boardRepository.findById(54L);
+        BoardEntity boardEntity = boardEntityOptional.get();
+        // BoardEntity에서 BoardFileEntity 조회
+//        List<BoardFileEntity> boardFileEntityList = boardEntity.getBoardFileEntityList();
+////        boardFileEntityList.forEach(boardFileEntity -> {
+////            System.out.println(boardFileEntity.getOriginalFileName());
+////            System.out.println(boardFileEntity.getStoredFileName());
+////        });
+    }
+
 }

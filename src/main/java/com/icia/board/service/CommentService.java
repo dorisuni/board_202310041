@@ -31,7 +31,7 @@ public class CommentService {
         // 1. BoardEntity에서 댓글 목록 가져오기
 //        List<CommentEntity> commentEntityList = boardEntity.getCommentEntityList();
         // 2. CommentRepository에서 가져오기
-        // select * from comment_table where board_id=?
+        // select * from comment_table where board_id=? order by id desc
         List<CommentEntity> commentEntityList = commentRepository.findByBoardEntityOrderByIdDesc(boardEntity);
 
         List<CommentDTO> commentDTOList = new ArrayList<>();
